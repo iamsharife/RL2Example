@@ -38,6 +38,26 @@ package cc.sitemaker.application.config {
 				.configure( _contextView );
 			
 			logger.debug("startConfiguration");
+		}	
+		
+		public function setupLifecycleListeners():void {
+			logger.debug("setupLifecycleListeners");
+			context.lifecycle.afterInitializing( afterInitializing );
+		}
+		
+		public function afterInitializing():void {
+			logger.debug("afterInitializing");
+			
+			var communicationChannels:Dictionary = new Dictionary();
+			communicationChannels[ "global" ] = injector.getInstance( IEventDispatcher, "global" );
+			communicationChannels[ "moduleOnly" ] = injector.getInstance( IEventDispatcher, "moduleOnly" );
+			
+			injector.map( Dictionary, "CommunicationChannels" ).toValue( communicationChannels );
+			
+			var mcm:ModuleCommandMap = new ModuleCommandMap();
+			injector.injectInto(mcm);
+			injector.map(IEventCommandMap, "moduleCommandMap").toValue( mcm );
+			logger.debug("mcm " + mcm.toString());
 		}
 		
 		public function setupInjections():void {
@@ -60,27 +80,7 @@ package cc.sitemaker.application.config {
 			logger.debug("mapCommands");
 			commandMap.map(ChangeLabelEvent.CHANGE_LABEL_REQUEST).toCommand(ChangeLabelCommand);
 			return this;
-		}		
-		
-		public function setupLifecycleListeners():void {
-			logger.debug("setupLifecycleListeners");
-			context.lifecycle.afterInitializing( afterInitializing );
-		}
-		
-		public function afterInitializing():void {
-			logger.debug("afterInitializing");
-			
-			var communicationChannels:Dictionary = new Dictionary();
-			communicationChannels[ "global" ] = injector.getInstance( IEventDispatcher, "global" );
-			communicationChannels[ "moduleOnly" ] = injector.getInstance( IEventDispatcher, "moduleOnly" );
-			
-			injector.map( Dictionary, "CommunicationChannels" ).toValue( communicationChannels );
-			
-			var mcm:ModuleCommandMap = new ModuleCommandMap();
-			injector.injectInto(mcm);
-			injector.map(IEventCommandMap, "moduleCommandMap").toValue( mcm );
-			logger.debug("mcm " + mcm.toString());
-		}
+		}	
 		
 	}
 }

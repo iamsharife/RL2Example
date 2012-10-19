@@ -24,7 +24,7 @@ package cc.sitemaker.blog.config {
 	import robotlegs.bender.framework.api.LogLevel;
 	import robotlegs.bender.framework.impl.Context;
 	
-	public class BlogConfig extends Configurator  implements IConfigDefault {
+	public class BlogConfig extends Configurator implements IConfigDefault {
 				
 		private var _context:IContext;
 		
@@ -45,6 +45,16 @@ package cc.sitemaker.blog.config {
 				.configure( _contextView );
 			
 			logger.debug("startConfiguration");
+		}
+		
+		public function setupLifecycleListeners():void {
+			logger.debug("setupLifecycleListeners");
+			context.lifecycle.afterInitializing( afterInitializing );
+		}	
+		
+		private function afterInitializing():void {
+			logger.debug("afterInitializing");
+			_moduleCommandMap = injector.parentInjector.getInstance(IEventCommandMap, "moduleCommandMap");
 		}
 		
 		public function setupInjections():void {
@@ -70,16 +80,6 @@ package cc.sitemaker.blog.config {
 			_moduleCommandMap.map(ChangeLabelEvent.CHANGE_FROM_ANOTHER_MODULE).toCommand(ChangeFromAnotherModuleCommand);
 			return this;
 		}	
-		
-		public function setupLifecycleListeners():void {
-			logger.debug("setupLifecycleListeners");
-			context.lifecycle.afterInitializing( afterInitializing );
-		}	
-		
-		private function afterInitializing():void {
-			logger.debug("afterInitializing");
-			_moduleCommandMap = injector.parentInjector.getInstance(IEventCommandMap, "moduleCommandMap");
-		}
 		
 	}
 }

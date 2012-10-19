@@ -2,19 +2,24 @@
 <s:Module xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		  xmlns:s="library://ns.adobe.com/flex/spark" 
 		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
-		  xmlns:mxml="robotlegs.bender.mxml.*" 
-		  xmlns:mvcs="robotlegs.bender.bundles.mvcs.*" 
-		  xmlns:modularity="robotlegs.bender.extensions.modularity.*" 
-		  xmlns:views="cc.sitemaker.blog.views.*" 
-		  xmlns:config="cc.sitemaker.blog.config.*" xmlns:contextView="robotlegs.bender.extensions.contextView.*" xmlns:scopedEventDispatcher="robotlegs.bender.extensions.scopedEventDispatcher.*">
+		  xmlns:mxml="robotlegs.bender.mxml.*"  
+		  xmlns:views="cc.sitemaker.blog.views.*"
+		  preinitialize="preinitializeHandler(event)">
 	
-	<fx:Declarations>
-		<mxml:ContextBuilderTag>
-			<mvcs:MVCSBundle />
-			<modularity:ModularityExtension />
-			<config:BlogConfig />
-		</mxml:ContextBuilderTag>
-	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import cc.sitemaker.blog.config.BlogConfig;
+			
+			import mx.events.FlexEvent;
+			
+			private var blogConfig:BlogConfig;
+			
+			protected function preinitializeHandler(event:FlexEvent):void {	
+				blogConfig = new BlogConfig(this);				
+			}			
+		]]>
+	</fx:Script>
 	
 	<views:BlogView />
 </s:Module>

@@ -2,63 +2,83 @@ package cc.sitemaker.blog.config {
 	
 	import cc.sitemaker.application.events.ChangeLabelEvent;
 	import cc.sitemaker.blog.commands.BlogChangeLabelCommand;
+	import cc.sitemaker.blog.commands.ChangeFromAnotherModuleCommand;
 	import cc.sitemaker.blog.models.BlogModel;
 	import cc.sitemaker.blog.views.BlogView;
 	import cc.sitemaker.blog.views.BlogViewMediator;
+	import cc.sitemaker.core.api.IConfigDefault;
+	import cc.sitemaker.core.impl.Configurator;
+	import cc.sitemaker.core.impl.ModuleCommandMap;
+	
+	import flash.display.DisplayObjectContainer;
 	
 	import org.swiftsuspenders.Injector;
 	
+	import robotlegs.bender.bundles.mvcs.MVCSBundle;
 	import robotlegs.bender.extensions.eventCommandMap.api.IEventCommandMap;
+	import robotlegs.bender.extensions.mediatorMap.api.IMediator;
 	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMap;
+	import robotlegs.bender.extensions.modularity.ModularityExtension;
 	import robotlegs.bender.framework.api.IContext;
+	import robotlegs.bender.framework.api.ILogger;
 	import robotlegs.bender.framework.api.LogLevel;
+	import robotlegs.bender.framework.impl.Context;
 	
-	public class BlogConfig {
+	public class BlogConfig extends Configurator  implements IConfigDefault {
+				
+		private var _context:IContext;
 		
-		[Inject]
-		public var mediatorMap:IMediatorMap;
+		private var _contextView:DisplayObjectContainer;
 		
-		[Inject]
-		public var commandMap:IEventCommandMap;
+		private var _moduleCommandMap:IEventCommandMap;
 		
-		[Inject]
-		public var context:IContext;
-		
-		[Inject]
-		public var injector:Injector;
-		
-		/*
-		 * PostConstruct is used to ensure all injections are ready 
-		*/
-		[PostConstruct]
-		public function init():void {
-			configure();
+		public function BlogConfig( contextView:DisplayObjectContainer ){
+			super(contextView);
+			_contextView = contextView;
+			startConfiguration();
 		}
 		
-		private function configure():void {
+		public function startConfiguration():void {
+			_context = new Context()
+				.extend( MVCSBundle )
+				.extend( this )
+				.configure( _contextView );
 			
-			context.logLevel = LogLevel.DEBUG;
-			context.lifecycle.afterInitializing( afterInitializing );
-			
-			mapModels();
-			mapViews();
-			mapCommands();
+			logger.debug("startConfiguration");
 		}
 		
-		private function mapModels():void {
+		public function setupInjections():void {
+			logger.debug("setupInjections");
+		}
+		
+		public function mapModels():IConfigDefault {		
+			logger.debug("mapModels");
 			injector.map(BlogModel).asSingleton();
+			return this;
 		}		
 		
-		private function mapViews():void {
+		public function mapViews():IConfigDefault {	
+			logger.debug("mapViews");
 			mediatorMap.map(BlogView).toMediator(BlogViewMediator);
+			return this;
 		}		
 		
-		private function mapCommands():void {
+		public function mapCommands():IConfigDefault {
+			logger.debug("mapCommands");
+			logger.debug("_moduleCommandMap " + (_moduleCommandMap as ModuleCommandMap).toString());
 			commandMap.map(ChangeLabelEvent.CHANGE_LABEL_REQUEST).toCommand(BlogChangeLabelCommand);
-		}		
+			_moduleCommandMap.map(ChangeLabelEvent.CHANGE_FROM_ANOTHER_MODULE).toCommand(ChangeFromAnotherModuleCommand);
+			return this;
+		}	
+		
+		public function setupLifecycleListeners():void {
+			logger.debug("setupLifecycleListeners");
+			context.lifecycle.afterInitializing( afterInitializing );
+		}	
 		
 		private function afterInitializing():void {
-			
+			logger.debug("afterInitializing");
+			_moduleCommandMap = injector.parentInjector.getInstance(IEventCommandMap, "moduleCommandMap");
 		}
 		
 	}

@@ -3,18 +3,33 @@ package cc.sitemaker.application.models
 	import cc.sitemaker.application.events.ChangeLabelEvent;
 	
 	import flash.events.IEventDispatcher;
+	
+	import robotlegs.bender.framework.api.IContext;
+	import robotlegs.bender.framework.api.ILogger;
 
 	public class ApplicationModel {
+		
+		[Inject]
+		public var context:IContext;
 		
 		[Inject]
 		public var dispatcher:IEventDispatcher;
 		
 		private var _labelValue:String;
 		
+		private var _logger:ILogger;
+		
 		public function ApplicationModel() {
 			
 		}
 
+		[PostConstruct]
+		public function init():void {
+			_logger = context.getLogger(this); 
+			
+			_logger.debug("init");
+		}
+		
 		public function get labelValue():String {
 			return _labelValue;
 		}
@@ -23,6 +38,7 @@ package cc.sitemaker.application.models
 			
 			if (_labelValue != value) { 
 				_labelValue = value;
+				_logger.debug("set labelValue");
 				dispatcher.dispatchEvent(new ChangeLabelEvent(ChangeLabelEvent.CHANGE_LABEL_HAPPENED));
 			}
 		}

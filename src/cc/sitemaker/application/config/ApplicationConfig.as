@@ -4,60 +4,82 @@ package cc.sitemaker.application.config {
 	import cc.sitemaker.application.models.ApplicationModel;
 	import cc.sitemaker.application.views.MainView;
 	import cc.sitemaker.application.views.MainViewMediator;
+	import cc.sitemaker.core.api.IConfigDefault;
+	import cc.sitemaker.core.impl.Configurator;
+	import cc.sitemaker.core.impl.ModuleCommandMap;
 	
-	import org.swiftsuspenders.Injector;
+	import flash.display.DisplayObjectContainer;
+	import flash.events.IEventDispatcher;
+	import flash.utils.Dictionary;
 	
+	import robotlegs.bender.bundles.mvcs.MVCSBundle;
 	import robotlegs.bender.extensions.eventCommandMap.api.IEventCommandMap;
-	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMap;
+	import robotlegs.bender.extensions.scopedEventDispatcher.ScopedEventDispatcherExtension;
 	import robotlegs.bender.framework.api.IContext;
-	import robotlegs.bender.framework.api.LogLevel;
+	import robotlegs.bender.framework.impl.Context;
 	
-	public class ApplicationConfig {
+	public class ApplicationConfig extends Configurator implements IConfigDefault {
 		
-		[Inject]
-		public var mediatorMap:IMediatorMap;
+		private var _context:IContext;
 		
-		[Inject]
-		public var commandMap:IEventCommandMap;
+		private var _contextView:DisplayObjectContainer;
 		
-		[Inject]
-		public var context:IContext;
-		
-		[Inject]
-		public var injector:Injector;
-		
-		/*
-		 * PostConstruct is used to ensure all injections are ready 
-		*/
-		[PostConstruct]
-		public function init():void {
-			configure();
+		public function ApplicationConfig( contextView:DisplayObjectContainer ){
+			super(contextView);
+			_contextView = contextView;
+			startConfiguration();
 		}
 		
-		private function configure():void {
+		public function startConfiguration():void {
+			_context = new Context()
+				.extend( MVCSBundle )
+				.extend( new ScopedEventDispatcherExtension("global","moduleOnly") )
+				.extend( this )
+				.configure( _contextView );
 			
-			context.logLevel = LogLevel.DEBUG;
-			context.lifecycle.afterInitializing( afterInitializing );
-			
-			mapModels();
-			mapViews();
-			mapCommands();
+			logger.debug("startConfiguration");
 		}
 		
-		private function mapModels():void {
-			injector.map(ApplicationModel).asSingleton();
+		public function setupInjections():void {
+			logger.debug("setupInjections");
+		}
+					
+		public function mapModels():IConfigDefault {
+			logger.debug("mapModels");
+			injector.map(ApplicationModel).asSingleton();			
+			return this;
 		}		
 		
-		private function mapViews():void {
+		public function mapViews():IConfigDefault {
+			logger.debug("mapViews");
 			mediatorMap.map(MainView).toMediator(MainViewMediator);
+			return this;
 		}		
 		
-		private function mapCommands():void {
+		public function mapCommands():IConfigDefault {
+			logger.debug("mapCommands");
 			commandMap.map(ChangeLabelEvent.CHANGE_LABEL_REQUEST).toCommand(ChangeLabelCommand);
+			return this;
 		}		
 		
-		private function afterInitializing():void {
+		public function setupLifecycleListeners():void {
+			logger.debug("setupLifecycleListeners");
+			context.lifecycle.afterInitializing( afterInitializing );
+		}
+		
+		public function afterInitializing():void {
+			logger.debug("afterInitializing");
 			
+			var communicationChannels:Dictionary = new Dictionary();
+			communicationChannels[ "global" ] = injector.getInstance( IEventDispatcher, "global" );
+			communicationChannels[ "moduleOnly" ] = injector.getInstance( IEventDispatcher, "moduleOnly" );
+			
+			injector.map( Dictionary, "CommunicationChannels" ).toValue( communicationChannels );
+			
+			var mcm:ModuleCommandMap = new ModuleCommandMap();
+			injector.injectInto(mcm);
+			injector.map(IEventCommandMap, "moduleCommandMap").toValue( mcm );
+			logger.debug("mcm " + mcm.toString());
 		}
 		
 	}

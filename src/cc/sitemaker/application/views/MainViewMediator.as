@@ -2,14 +2,19 @@ package cc.sitemaker.application.views
 {
 	import cc.sitemaker.application.events.ChangeLabelEvent;
 	import cc.sitemaker.application.models.ApplicationModel;
+	import cc.sitemaker.core.impl.SMMediator;
 	
 	import flash.events.IEventDispatcher;
 	import flash.events.MouseEvent;
 	
-	import robotlegs.bender.bundles.mvcs.Mediator;
+	import mx.controls.Alert;
 	
-	public class MainViewMediator extends Mediator {
-		
+	import robotlegs.bender.bundles.mvcs.Mediator;
+	import robotlegs.bender.framework.api.IContext;
+	import robotlegs.bender.framework.api.ILogger;
+	
+	public class MainViewMediator extends SMMediator {
+				
 		[Inject]
 		public var view:MainView;
 
@@ -21,12 +26,19 @@ package cc.sitemaker.application.views
 		}
 		
 		override public function initialize():void {
-			super.initialize();
+			super.initialize(); 
+			
+			logger.debug("initialise");
+			
+			addGlobalListener(ChangeLabelEvent.CHANGE_LABEL_REQUEST, function():void {
+				Alert.show("I heard about the change!");
+				dispatchModuleEvent(new ChangeLabelEvent(ChangeLabelEvent.CHANGE_FROM_ANOTHER_MODULE));
+			});
 			
 			view.lblSomeText.text = "MainView Mediator Initialize";
 			
 			addContextListener(ChangeLabelEvent.CHANGE_LABEL_HAPPENED, onChangeLabelHappened);
-			eventMap.mapListener(view.btnChangeLabel, MouseEvent.CLICK, onChangeLabelClick);
+			addComponentListener(view.btnChangeLabel, MouseEvent.CLICK, onChangeLabelClick);
 		}
 		
 		private function onChangeLabelClick(e:MouseEvent):void {
@@ -35,6 +47,7 @@ package cc.sitemaker.application.views
 		
 		private function onChangeLabelHappened(e:ChangeLabelEvent):void {
 			view.lblSomeText.text = model.labelValue;
+			logger.debug("onChangeLabelHappened");
 		}
 		
 		override public function destroy():void {

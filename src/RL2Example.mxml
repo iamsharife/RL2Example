@@ -4,16 +4,21 @@
 			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600"
 			   xmlns:config="cc.sitemaker.application.config.*" 
 			   xmlns:views="cc.sitemaker.application.views.*" 
-			   xmlns:mxml="robotlegs.bender.mxml.*" 
-			   xmlns:mvcs="robotlegs.bender.bundles.mvcs.*" xmlns:modularity="robotlegs.bender.extensions.modularity.*">
+			   preinitialize="preinitializeHandler(event)">
 	
-	<fx:Declarations>
-		<mxml:ContextBuilderTag>
-			<mvcs:MVCSBundle />
-			<modularity:ModularityExtension />
-			<config:ApplicationConfig />
-		</mxml:ContextBuilderTag>
-	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import cc.sitemaker.application.config.ApplicationConfig;
+			
+			import mx.events.FlexEvent;
+			
+			private var applicationConfig:ApplicationConfig;
+			
+			protected function preinitializeHandler(event:FlexEvent):void {	
+				applicationConfig = new ApplicationConfig(this);				
+			}			
+		]]>
+	</fx:Script>
 	
 	<views:MainView />
 	
